@@ -2,6 +2,7 @@
 const formulario = document.getElementById("cadastro-produto-form");
 
 let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
+let movimentacoes = JSON.parse(localStorage.getItem("movimentacoes")) || [];
 
 function salvarProdutos() {
     localStorage.setItem("produtos", JSON.stringify(produtos));
@@ -14,7 +15,7 @@ function carregarProdutos() {
 
     tabela.innerHTML = "";
 
-    produtos.forEach(function(produto) {
+    produtos.forEach(function (produto) {
         const linha = document.createElement("tr");
 
         const dados = [
@@ -26,7 +27,7 @@ function carregarProdutos() {
             produto.estoqueMinimo
         ];
 
-        dados.forEach(function(valor) {
+        dados.forEach(function (valor) {
             const coluna = document.createElement("td");
             coluna.textContent = valor;
             linha.appendChild(coluna);
@@ -36,13 +37,13 @@ function carregarProdutos() {
 
         const botaoEditar = document.createElement("button");
         botaoEditar.textContent = "Editar";
-        botaoEditar.addEventListener("click", function() {
+        botaoEditar.addEventListener("click", function () {
             editarProduto(produto.codigo);
         });
 
         const botaoExcluir = document.createElement("button");
         botaoExcluir.textContent = "Excluir";
-        botaoExcluir.addEventListener("click", function() {
+        botaoExcluir.addEventListener("click", function () {
             excluirProduto(produto.codigo);
         });
 
@@ -55,7 +56,7 @@ function carregarProdutos() {
 }
 
 function editarProduto(codigo) {
-    const produto = produtos.find(function(item) {
+    const produto = produtos.find(function (item) {
         return item.codigo === codigo;
     });
 
@@ -96,7 +97,7 @@ function excluirProduto(codigo) {
 
     if (!confirmar) return;
 
-    produtos = produtos.filter(function(produto) {
+    produtos = produtos.filter(function (produto) {
         return produto.codigo !== codigo;
     });
 
@@ -105,9 +106,22 @@ function excluirProduto(codigo) {
 
     alert("Produto excluído com sucesso!");
 }
+function carregarProdutosEntrada() {
+    const campoProduto = document.getElementById("produto-entrada");
 
+    if (!campoProduto) return;
+
+    produtos.forEach(function (produto) {
+        const opcao = document.createElement("option");
+
+        opcao.value = produto.codigo;
+        opcao.textContent = produto.nome;
+
+        campoProduto.appendChild(opcao);
+    });
+}
 if (formulario) {
-    formulario.addEventListener("submit", function(event) {
+    formulario.addEventListener("submit", function (event) {
         event.preventDefault();
 
         const codigoProduto = document.getElementById("codigo").value.trim();
@@ -117,7 +131,7 @@ if (formulario) {
         const estoqueInicial = Number(document.getElementById("estoque-inicial").value);
         const estoqueMinimo = Number(document.getElementById("estoque-minimo").value);
 
-        const produtoExistente = produtos.find(function(produto) {
+        const produtoExistente = produtos.find(function (produto) {
             return produto.codigo === codigoProduto;
         });
 
@@ -152,3 +166,81 @@ if (formulario) {
 }
 
 carregarProdutos();
+carregarProdutosEntrada();
+
+function registrarEntrada(event) {
+    event.preventDefault();
+
+    const codigo = document.getElementById("produto-entrada").value;
+    const quantidade = Number(document.getElementById("quantidade-entrada").value);
+    const responsavel = document.getElementById("responsavel-entrada").value.trim();
+    const documento = document.getElementById("documento-entrada").value.trim();
+
+    const produto = produtos.find(function (item) {
+        return item.codigo === codigo;
+    });
+
+    if (!produto || quantidade <= 0 || !Number.isFinite(quantidade) ||
+        !responsavel || !documento) {
+        alert("Verifique os dados da entrada.");
+        return;
+    }
+
+    produto.estoque += quantidade;
+    const movimentacao = {
+    tipo: "Entrada",
+    codigo: produto.codigo,
+    produto: produto.nome,
+    quantidade: quantidade,
+    responsavel: responsavel,
+    documento: documento,
+    data: new Date().toLocaleString("pt-BR")
+};
+function carregarHistorico() {
+    const tabela = document.getElementById("lista-movimentacoes");
+
+    if (!tabela) return;
+
+    tabela.innerHTML = "";
+
+    movimentacoes.forEach(function(movimentacao) {
+        const linha = document.createElement("tr");
+
+        const dados = [
+            movimentacao.data,
+            movimentacao.tipo,
+            movimentacao.codigo,
+            movimentacao.produto,
+            movimentacao.quantidade,
+            movimentacao.responsavel,
+            movimentacao.documento
+        ];
+
+        dados.forEach(function(valor) {
+            const coluna = document.createElement("td");
+            coluna.textContent = valor;
+            linha.appendChild(coluna);
+        });
+
+        tabela.appendChild(linha);
+    });
+}
+movimentacoes.push(movimentacao);
+
+localStorage.setItem("movimentacoes", JSON.stringify(movimentacoes));
+
+    salvarProdutos();
+
+    alert("Entrada registrada! Estoque atualizado para " + produto.estoque + ".");
+
+    document.getElementById("form-entrada").reset();
+}
+
+const formularioEntrada = document.getElementById("form-entrada");
+
+if (formularioEntrada) {
+    formularioEntrada.addEventListener("submit", registrarEntrada);
+}
+carregarProdutos();
+carregarProdutosEntrada();
+carregarHistorico();

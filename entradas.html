@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Controle de Estoque - Raizes do Nordeste</title>
+</head>
+
+<body>
+    <header>
+        <h1>ERP - Raizes do Nordeste - Estoque</h1>
+        <br>
+        <p>Filial - Diadema</p><br><br>
+        <p>Bem-vindo ao sistema de controle de estoque da Raizes do Nordeste. Aqui você pode gerenciar seus produtos,
+            verificar o estoque disponível e realizar outras operações relacionadas ao gerenciamento de inventário.</p>
+    </header>
+    <nav>
+        <ul>
+            <li><a href="index.html">Visão geral</a></li>
+            <li><a href="produtos.html">Produtos</a></li>
+            <li><a href="entradas.html">Entradas</a></li>
+            <li><a href="saidas.html">Saídas</a></li>
+            <li><a href="historico.html">Histórico de movimentações</a></li>
+            <li><a href="transferencias.html">Transferências</a></li>
+        </ul>
+    </nav>
+    <main>
+        <h2>Registro de entrada de estoque</h2>
+
+        <section>
+            <form id="form-entrada">
+
+                <label for="produto-entrada">Produto:</label>
+                <select id="produto-entrada" required>
+                    <option value="">Selecione um produto</option>
+                </select>
+
+                <label for="quantidade-entrada">Quantidade recebida:</label>
+                <input type="number" id="quantidade-entrada" min="1" required>
+
+                <label for="responsavel-entrada">Responsável:</label>
+                <input type="text" id="responsavel-entrada" required>
+
+                <label for="documento-entrada">Nota fiscal / Documento:</label>
+                <input type="text" id="documento-entrada" required>
+
+                <button type="submit">Registrar entrada</button>
+
+            </form>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
