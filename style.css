@@ -42,3 +42,77 @@ main h2 {
     font-size: 24px;
     margin-bottom: 25px;
 }
+
+.card {
+    background-color: #fff;
+    padding: 18px;
+    border: 1px solid #d6d6d6;
+    border-left: 4px solid #8b1e1e;
+    flex: 1;
+    min-width: 200px;
+}
+
+.card h3 {
+    margin-top: 0;
+    color: #555;
+    font-size: 15px;
+    font-weight: normal;
+}
+
+.card p {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    margin-top: 15px;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background-color: #eeeeee;
+    color: #333;
+    font-weight: bold;
+}
+
+tbody tr:hover {
+    background-color: #f5f5f5;
+}
+
+#cadastro-produto-form {
+    background-color: white;
+    border: 1px solid #d6d6d6;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 600px;
+}
+
+#cadastro-produto-form input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    margin-bottom: 12px;
+}
+
+#cadastro-produto-form button {
+    padding: 12px;
+    background-color: #8b1e1e;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+#cadastro-produto-form button:hover {
+    background-color: #6f1717;
+}
