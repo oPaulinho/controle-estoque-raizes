@@ -17,7 +17,7 @@ function carregarProdutos() {
 
     tabela.innerHTML = "";
 
-    produtos.forEach(function(produto) {
+    produtos.forEach(function (produto) {
         const linha = document.createElement("tr");
 
         const dados = [
@@ -29,25 +29,35 @@ function carregarProdutos() {
             produto.estoqueMinimo
         ];
 
-        dados.forEach(function(valor) {
+        dados.forEach(function (valor) {
             const coluna = document.createElement("td");
             coluna.textContent = valor;
             linha.appendChild(coluna);
         });
+        let situacao = "Normal";
 
+        if (produto.estoque === 0) {
+            situacao = "Sem estoque";
+        } else if (produto.estoque <= produto.estoqueMinimo) {
+            situacao = "Estoque baixo";
+        }
+
+        const colunaSituacao = document.createElement("td");
+        colunaSituacao.textContent = situacao;
+        linha.appendChild(colunaSituacao);
         const colunaAcoes = document.createElement("td");
 
         const botaoEditar = document.createElement("button");
         botaoEditar.textContent = "Editar";
 
-        botaoEditar.addEventListener("click", function() {
+        botaoEditar.addEventListener("click", function () {
             editarProduto(produto.codigo);
         });
 
         const botaoExcluir = document.createElement("button");
         botaoExcluir.textContent = "Excluir";
 
-        botaoExcluir.addEventListener("click", function() {
+        botaoExcluir.addEventListener("click", function () {
             excluirProduto(produto.codigo);
         });
 
@@ -61,7 +71,7 @@ function carregarProdutos() {
 
 // EDITAR PRODUTO
 function editarProduto(codigo) {
-    const produto = produtos.find(function(item) {
+    const produto = produtos.find(function (item) {
         return item.codigo === codigo;
     });
 
@@ -103,7 +113,7 @@ function excluirProduto(codigo) {
 
     if (!confirmar) return;
 
-    produtos = produtos.filter(function(produto) {
+    produtos = produtos.filter(function (produto) {
         return produto.codigo !== codigo;
     });
 
@@ -115,7 +125,7 @@ function excluirProduto(codigo) {
 
 // CADASTRAR PRODUTO
 if (formulario) {
-    formulario.addEventListener("submit", function(event) {
+    formulario.addEventListener("submit", function (event) {
         event.preventDefault();
 
         const codigoProduto = document.getElementById("codigo").value.trim();
@@ -125,7 +135,7 @@ if (formulario) {
         const estoqueInicial = Number(document.getElementById("estoque-inicial").value);
         const estoqueMinimo = Number(document.getElementById("estoque-minimo").value);
 
-        const produtoExistente = produtos.find(function(produto) {
+        const produtoExistente = produtos.find(function (produto) {
             return produto.codigo === codigoProduto;
         });
 
@@ -165,7 +175,7 @@ function carregarProdutosEntrada() {
 
     if (!campoProduto) return;
 
-    produtos.forEach(function(produto) {
+    produtos.forEach(function (produto) {
         const opcao = document.createElement("option");
 
         opcao.value = produto.codigo;
@@ -181,7 +191,7 @@ function carregarProdutosSaida() {
 
     if (!campoProduto) return;
 
-    produtos.forEach(function(produto) {
+    produtos.forEach(function (produto) {
         const opcao = document.createElement("option");
 
         opcao.value = produto.codigo;
@@ -200,7 +210,7 @@ function registrarEntrada(event) {
     const responsavel = document.getElementById("responsavel-entrada").value.trim();
     const documento = document.getElementById("documento-entrada").value.trim();
 
-    const produto = produtos.find(function(item) {
+    const produto = produtos.find(function (item) {
         return item.codigo === codigo;
     });
 
@@ -242,7 +252,7 @@ function registrarSaida(event) {
     const responsavel = document.getElementById("responsavel-saida").value.trim();
     const documento = document.getElementById("documento-saida").value.trim();
 
-    const produto = produtos.find(function(item) {
+    const produto = produtos.find(function (item) {
         return item.codigo === codigo;
     });
 
@@ -302,7 +312,7 @@ function carregarHistorico() {
 
     tabela.innerHTML = "";
 
-    movimentacoes.forEach(function(movimentacao) {
+    movimentacoes.forEach(function (movimentacao) {
         const linha = document.createElement("tr");
 
         const dados = [
@@ -315,7 +325,7 @@ function carregarHistorico() {
             movimentacao.documento
         ];
 
-        dados.forEach(function(valor) {
+        dados.forEach(function (valor) {
             const coluna = document.createElement("td");
             coluna.textContent = valor;
             linha.appendChild(coluna);
