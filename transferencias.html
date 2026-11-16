@@ -1,0 +1,84 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Transferências - Raízes do Nordeste</title>
+</head>
+
+<body>
+    <header>
+        <h1>ERP - Raízes do Nordeste - Estoque</h1>
+        <br>
+        <p>Controle de transferências entre filiais</p>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="index.html">Visão geral</a></li>
+            <li><a href="produtos.html">Produtos</a></li>
+            <li><a href="entradas.html">Entradas</a></li>
+            <li><a href="saidas.html">Saídas</a></li>
+            <li><a href="historico.html">Histórico de movimentações</a></li>
+            <li><a href="transferencias.html">Transferências</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <h2>Nova transferência</h2>
+
+        <section>
+            <form id="form-transferencia">
+
+                <label for="filial-origem">Filial de origem:</label>
+                <input type="text" id="filial-origem" value="Diadema" required>
+
+                <label for="filial-destino">Filial de destino:</label>
+                <input type="text" id="filial-destino" required>
+
+                <label for="produto-transferencia">Produto:</label>
+                <select id="produto-transferencia" required>
+                    <option value="">Selecione um produto</option>
+                </select>
+
+                <label for="quantidade-transferencia">Quantidade enviada:</label>
+                <input type="number" id="quantidade-transferencia" min="1" required>
+
+                <label for="responsavel-transferencia">Responsável:</label>
+                <input type="text" id="responsavel-transferencia" required>
+
+                <label for="documento-transferencia">Nota fiscal / Documento:</label>
+                <input type="text" id="documento-transferencia" required>
+
+                <button type="submit">Enviar transferência</button>
+
+            </form>
+        </section>
+
+        <h2>Transferências registradas</h2>
+
+        <section>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Origem</th>
+                        <th>Destino</th>
+                        <th>Enviado</th>
+                        <th>Recebido</th>
+                        <th>Situação</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-transferencias"></tbody>
+            </table>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

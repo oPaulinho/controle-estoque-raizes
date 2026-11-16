@@ -3,6 +3,7 @@ const formulario = document.getElementById("cadastro-produto-form");
 
 let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
 let movimentacoes = JSON.parse(localStorage.getItem("movimentacoes")) || [];
+let transferencias = JSON.parse(localStorage.getItem("transferencias")) || [];
 
 // SALVAR PRODUTOS
 function salvarProdutos() {
@@ -340,3 +341,219 @@ carregarProdutos();
 carregarProdutosEntrada();
 carregarHistorico();
 carregarProdutosSaida();
+
+
+// CARREGAR PRODUTOS NO CAMPO DE TRANSFERÊNCIAS
+function carregarProdutosTransferencia() {
+    const campoProduto = document.getElementById("produto-transferencia");
+
+    if (!campoProduto) return;
+
+    campoProduto.innerHTML = '<option value="">Selecione um produto</option>';
+
+    produtos.forEach(function (produto) {
+        const opcao = document.createElement("option");
+
+        opcao.value = produto.codigo;
+        opcao.textContent = produto.nome + " (Estoque: " + produto.estoque + ")";
+
+        campoProduto.appendChild(opcao);
+    });
+}
+
+// INICIALIZAR CAMPO DE TRANSFERÊNCIAS
+carregarProdutosTransferencia();
+
+
+// SALVAR TRANSFERÊNCIAS
+function salvarTransferencias() {
+    localStorage.setItem("transferencias", JSON.stringify(transferencias));
+}
+
+// CARREGAR TRANSFERÊNCIAS NA TABELA
+function carregarTransferencias() {
+    const tabela = document.getElementById("lista-transferencias");
+
+    if (!tabela) return;
+
+    tabela.innerHTML = "";
+
+    transferencias.forEach(function (transferencia) {
+        const linha = document.createElement("tr");
+
+        const dados = [
+            transferencia.produto,
+            transferencia.origem,
+            transferencia.destino,
+            transferencia.quantidadeEnviada,
+            transferencia.quantidadeRecebida ?? "-",
+            transferencia.situacao
+        ];
+
+        dados.forEach(function (valor) {
+            const coluna = document.createElement("td");
+            coluna.textContent = valor;
+            linha.appendChild(coluna);
+        });
+
+        const colunaAcoes = document.createElement("td");
+
+        if (transferencia.situacao === "Em trânsito") {
+            const botaoReceber = document.createElement("button");
+            botaoReceber.textContent = "Registrar recebimento";
+
+            botaoReceber.addEventListener("click", function () {
+                registrarRecebimento(transferencia.id);
+            });
+
+            colunaAcoes.appendChild(botaoReceber);
+        }
+
+        linha.appendChild(colunaAcoes);
+        tabela.appendChild(linha);
+    });
+}
+
+
+// REGISTRAR ENVIO DE TRANSFERÊNCIA
+function registrarTransferencia(event) {
+    event.preventDefault();
+
+    const origem = document.getElementById("filial-origem").value.trim();
+    const destino = document.getElementById("filial-destino").value.trim();
+    const codigo = document.getElementById("produto-transferencia").value;
+    const quantidade = Number(document.getElementById("quantidade-transferencia").value);
+    const responsavel = document.getElementById("responsavel-transferencia").value.trim();
+    const documento = document.getElementById("documento-transferencia").value.trim();
+
+    const produto = produtos.find(function (item) {
+        return item.codigo === codigo;
+    });
+
+    if (!produto || !origem || !destino || !responsavel || !documento ||
+        !Number.isFinite(quantidade) || quantidade <= 0) {
+        alert("Verifique os dados da transferência.");
+        return;
+    }
+
+    if (origem.toLowerCase() === destino.toLowerCase()) {
+        alert("A filial de origem e destino não podem ser iguais.");
+        return;
+    }
+
+    if (quantidade > produto.estoque) {
+        alert("Estoque insuficiente! Disponível: " + produto.estoque);
+        return;
+    }
+
+    produto.estoque -= quantidade;
+
+    const novaTransferencia = {
+        id: Date.now(),
+        codigo: produto.codigo,
+        produto: produto.nome,
+        origem: origem,
+        destino: destino,
+        quantidadeEnviada: quantidade,
+        quantidadeRecebida: null,
+        responsavel: responsavel,
+        documento: documento,
+        situacao: "Em trânsito",
+        data: new Date().toLocaleString("pt-BR")
+    };
+
+    transferencias.push(novaTransferencia);
+
+    movimentacoes.push({
+        tipo: "Transferência enviada",
+        codigo: produto.codigo,
+        produto: produto.nome,
+        quantidade: quantidade,
+        responsavel: responsavel,
+        documento: documento,
+        data: new Date().toLocaleString("pt-BR")
+    });
+
+    salvarProdutos();
+    salvarTransferencias();
+    localStorage.setItem("movimentacoes", JSON.stringify(movimentacoes));
+
+    carregarProdutosTransferencia();
+    carregarTransferencias();
+
+    alert("Transferência enviada! Quantidade retirada do estoque da filial de origem.");
+
+    document.getElementById("form-transferencia").reset();
+    document.getElementById("filial-origem").value = "Diadema";
+}
+
+// REGISTRAR RECEBIMENTO DA TRANSFERÊNCIA
+function registrarRecebimento(id) {
+    const transferencia = transferencias.find(function (item) {
+        return item.id === id;
+    });
+
+    if (!transferencia || transferencia.situacao !== "Em trânsito") {
+        alert("Transferência não encontrada ou já recebida.");
+        return;
+    }
+
+    const quantidade = prompt(
+        "Quantidade efetivamente recebida de " +
+        transferencia.produto +
+        " (enviada: " + transferencia.quantidadeEnviada + "):"
+    );
+
+    if (quantidade === null) return;
+
+    const recebida = Number(quantidade);
+
+    if (!Number.isInteger(recebida) || recebida <= 0 ||
+        recebida > transferencia.quantidadeEnviada) {
+        alert("Informe uma quantidade válida, maior que zero e não superior à enviada.");
+        return;
+    }
+
+    transferencia.quantidadeRecebida = recebida;
+
+    if (recebida === transferencia.quantidadeEnviada) {
+        transferencia.situacao = "Recebida";
+    } else {
+        transferencia.situacao = "Divergência";
+        transferencia.divergencia =
+            transferencia.quantidadeEnviada - recebida;
+    }
+
+    transferencia.dataRecebimento = new Date().toLocaleString("pt-BR");
+
+    movimentacoes.push({
+        tipo: "Transferência recebida",
+        codigo: transferencia.codigo,
+        produto: transferencia.produto,
+        quantidade: recebida,
+        responsavel: transferencia.destino,
+        documento: transferencia.documento,
+        data: new Date().toLocaleString("pt-BR")
+    });
+
+    localStorage.setItem("movimentacoes", JSON.stringify(movimentacoes));
+
+    salvarTransferencias();
+    carregarTransferencias();
+
+    alert(
+        recebida === transferencia.quantidadeEnviada
+            ? "Recebimento registrado com sucesso!"
+            : "Divergência identificada! Faltaram " +
+            transferencia.divergencia + " unidades."
+    );
+}
+// CONECTAR FORMULÁRIO DE TRANSFERÊNCIA
+const formularioTransferencia = document.getElementById("form-transferencia");
+
+if (formularioTransferencia) {
+    formularioTransferencia.addEventListener("submit", registrarTransferencia);
+}
+
+// INICIALIZAR TRANSFERÊNCIAS
+carregarTransferencias();
