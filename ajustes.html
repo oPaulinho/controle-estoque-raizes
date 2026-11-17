@@ -1,0 +1,64 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Ajustes de estoque - Raízes do Nordeste</title>
+</head>
+
+<body>
+    <header>
+        <h1>ERP - Raízes do Nordeste - Estoque</h1>
+        <p>Conferência e ajuste de estoque</p>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="index.html">Visão geral</a></li>
+            <li><a href="produtos.html">Produtos</a></li>
+            <li><a href="entradas.html">Entradas</a></li>
+            <li><a href="saidas.html">Saídas</a></li>
+            <li><a href="historico.html">Histórico</a></li>
+            <li><a href="transferencias.html">Transferências</a></li>
+            <li><a href="ajustes.html">Ajustes</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <h2>Conferência de estoque</h2>
+
+        <section>
+            <form id="form-ajuste">
+
+                <label for="filial-ajuste">Filial:</label>
+                <input type="text" id="filial-ajuste" value="Diadema" required>
+
+                <label for="produto-ajuste">Produto:</label>
+                <select id="produto-ajuste" required>
+                    <option value="">Selecione um produto</option>
+                </select>
+
+                <p id="saldo-atual-ajuste">Estoque registrado: -</p>
+
+                <label for="quantidade-ajuste">Quantidade encontrada na conferência:</label>
+                <input type="number" id="quantidade-ajuste" min="0" step="1" required>
+
+                <label for="responsavel-ajuste">Responsável pela conferência:</label>
+                <input type="text" id="responsavel-ajuste" required>
+
+                <label for="motivo-ajuste">Justificativa do ajuste:</label>
+                <textarea id="motivo-ajuste" required></textarea>
+
+                <button type="submit">Registrar ajuste</button>
+
+            </form>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

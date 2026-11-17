@@ -709,3 +709,112 @@ carregarProdutosSaida();
 carregarHistorico();
 carregarProdutosTransferencia();
 carregarTransferencias();
+
+
+// AJUSTE DE ESTOQUE POR CONFERÊNCIA
+
+function carregarProdutosAjuste() {
+    const campo = document.getElementById("produto-ajuste");
+
+    if (!campo) return;
+
+    campo.innerHTML = '<option value="">Selecione um produto</option>';
+
+    produtos.forEach(function (produto) {
+        const opcao = document.createElement("option");
+        opcao.value = produto.codigo;
+        opcao.textContent = produto.nome;
+        campo.appendChild(opcao);
+    });
+}
+
+function mostrarSaldoAjuste() {
+    const codigo = document.getElementById("produto-ajuste").value;
+    const filial = document.getElementById("filial-ajuste").value.trim();
+    const exibicao = document.getElementById("saldo-atual-ajuste");
+
+    const produto = produtos.find(item => item.codigo === codigo);
+
+    if (!produto || !filial) {
+        exibicao.textContent = "Estoque registrado: -";
+        return;
+    }
+
+    const saldo = obterEstoqueFilial(produto, filial);
+    exibicao.textContent = "Estoque registrado: " + saldo;
+}
+
+const formularioAjuste = document.getElementById("form-ajuste");
+
+if (formularioAjuste) {
+    carregarProdutosAjuste();
+
+    document.getElementById("produto-ajuste")
+        .addEventListener("change", mostrarSaldoAjuste);
+
+    document.getElementById("filial-ajuste")
+        .addEventListener("input", mostrarSaldoAjuste);
+
+    formularioAjuste.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const codigo = document.getElementById("produto-ajuste").value;
+        const filial = document.getElementById("filial-ajuste").value.trim();
+        const quantidadeEncontrada = Number(
+            document.getElementById("quantidade-ajuste").value
+        );
+        const responsavel = document.getElementById("responsavel-ajuste").value.trim();
+        const motivo = document.getElementById("motivo-ajuste").value.trim();
+
+        const produto = produtos.find(item => item.codigo === codigo);
+
+        if (!produto || !filial || !responsavel || !motivo ||
+            !Number.isInteger(quantidadeEncontrada) ||
+            quantidadeEncontrada < 0) {
+            alert("Verifique os dados do ajuste.");
+            return;
+        }
+
+        const saldoAnterior = obterEstoqueFilial(produto, filial);
+        const diferenca = quantidadeEncontrada - saldoAnterior;
+
+        if (diferenca === 0) {
+            alert("A conferência não identificou diferença no estoque.");
+            return;
+        }
+
+        if (!confirm(
+            "Saldo registrado: " + saldoAnterior +
+            "\nQuantidade encontrada: " + quantidadeEncontrada +
+            "\nDiferença: " + diferenca +
+            "\n\nConfirma o ajuste?"
+        )) {
+            return;
+        }
+
+        atualizarEstoqueFilial(produto, filial, quantidadeEncontrada);
+
+        movimentacoes.push({
+            tipo: "Ajuste de estoque",
+            codigo: produto.codigo,
+            produto: produto.nome,
+            quantidade: diferenca,
+            saldoAnterior: saldoAnterior,
+            saldoContado: quantidadeEncontrada,
+            responsavel: responsavel,
+            documento: "Motivo: " + motivo,
+            filial: filial,
+            data: new Date().toLocaleString("pt-BR")
+        });
+
+        salvarProdutos();
+        salvarMovimentacoes();
+
+        formularioAjuste.reset();
+        document.getElementById("filial-ajuste").value = "Diadema";
+        document.getElementById("saldo-atual-ajuste").textContent =
+            "Estoque registrado: -";
+
+        alert("Ajuste registrado e histórico atualizado!");
+    });
+}
