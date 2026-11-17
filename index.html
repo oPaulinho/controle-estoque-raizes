@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -5,17 +6,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-    <title>Controle de Estoque - Raizes do Nordeste</title>
+    <title>Controle de Estoque - Raízes do Nordeste</title>
 </head>
 
 <body>
     <header>
-        <h1>ERP - Raizes do Nordeste - Estoque</h1>
+        <h1>ERP - Raízes do Nordeste - Estoque</h1>
         <br>
-        <p>Filial - Diadema</p><br><br>
-        <p>Bem-vindo ao sistema de controle de estoque da Raizes do Nordeste. Aqui você pode gerenciar seus produtos,
-            verificar o estoque disponível e realizar outras operações relacionadas ao gerenciamento de inventário.</p>
+        <p>Filial - Diadema</p>
+        <br>
+        <p>Bem-vindo ao sistema de controle de estoque da Raízes do Nordeste.</p>
     </header>
+
     <nav>
         <ul>
             <li><a href="index.html">Visão geral</a></li>
@@ -26,34 +28,24 @@
             <li><a href="transferencias.html">Transferências</a></li>
         </ul>
     </nav>
+
     <main>
         <h2>Visão geral do estoque</h2>
+
         <section>
             <div class="card">
-                <h3>
-                    Itens no sistema
-                </h3>
-                <p id="total-itens">
-                    Total de itens: 0
-                </p>
+                <h3>Produtos cadastrados</h3>
+                <p id="total-itens">Total de produtos: 0</p>
             </div>
 
             <div class="card">
-                <h3>
-                    Itens para verificar
-                </h3>
-                <p id="total-verificar">
-                    Total de itens para verificar: 0
-                </p>
+                <h3>Estoque para verificar</h3>
+                <p id="total-verificar">Produtos para verificar: 0</p>
             </div>
 
             <div class="card">
-                <h3>
-                    Pendentes de análise
-                </h3>
-                <p id="total-pendentes">
-                    Total de itens pendentes de análise: 0
-                </p>
+                <h3>Pendências</h3>
+                <p id="total-pendentes">Transferências pendentes: 0</p>
             </div>
         </section>
 
@@ -71,28 +63,13 @@
                     </tr>
                 </thead>
 
-                <tbody>
-                    <tr>
-                        <td>13/11/2026</td>
-                        <td>Farinha de trigo</td>
-                        <td>Entrada</td>
-                        <td>20</td>
-                        <td>Colaborador</td>
-                    </tr>
-
-                    <tr>
-                        <td>13/11/2026</td>
-                        <td>Óleo de soja</td>
-                        <td>Saída</td>
-                        <td>5</td>
-                        <td>Colaborador</td>
-                    </tr>
-                </tbody>
+                <tbody id="ultimas-movimentacoes"></tbody>
             </table>
         </section>
     </main>
 
     <script src="script.js"></script>
+    <script src="painel.js"></script>
 </body>
 
 </html>
