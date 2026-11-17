@@ -5,12 +5,80 @@ let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
 let movimentacoes = JSON.parse(localStorage.getItem("movimentacoes")) || [];
 let transferencias = JSON.parse(localStorage.getItem("transferencias")) || [];
 
+// ESTOQUE SEPARADO POR FILIAL
+
+function normalizarFilial(filial) {
+    const nome = filial.trim();
+
+    if (nome.toLowerCase() === "diadema") {
+        return "Diadema";
+    }
+
+    return nome;
+}
+
+function obterEstoqueFilial(produto, filial) {
+    if (!produto.estoquesPorFilial) {
+        produto.estoquesPorFilial = {
+            Diadema: Number(produto.estoque) || 0
+        };
+    }
+
+    const nomeFilial = normalizarFilial(filial);
+    const chaveExistente = Object.keys(produto.estoquesPorFilial)
+        .find(function (chave) {
+            return chave.toLowerCase() === nomeFilial.toLowerCase();
+        });
+
+    if (!chaveExistente) {
+        return 0;
+    }
+
+    return Number(produto.estoquesPorFilial[chaveExistente]) || 0;
+}
+
+function atualizarEstoqueFilial(produto, filial, quantidade) {
+    if (!produto.estoquesPorFilial) {
+        produto.estoquesPorFilial = {};
+    }
+
+    const nomeFilial = normalizarFilial(filial);
+    const chaveExistente = Object.keys(produto.estoquesPorFilial)
+        .find(function (chave) {
+            return chave.toLowerCase() === nomeFilial.toLowerCase();
+        });
+
+    const chave = chaveExistente || nomeFilial;
+
+    produto.estoquesPorFilial[chave] = quantidade;
+
+    if (chave.toLowerCase() === "diadema") {
+        produto.estoque = quantidade;
+    }
+}
+
+// MIGRAR PRODUTOS ANTIGOS PARA O NOVO FORMATO
+
+produtos.forEach(function (produto) {
+    if (!produto.estoquesPorFilial) {
+        produto.estoquesPorFilial = {};
+    }
+
+    if (produto.estoquesPorFilial.Diadema === undefined) {
+        produto.estoquesPorFilial.Diadema = Number(produto.estoque) || 0;
+    }
+
+    produto.estoque = Number(produto.estoquesPorFilial.Diadema) || 0;
+});
+
 // SALVAR PRODUTOS
+
 function salvarProdutos() {
     localStorage.setItem("produtos", JSON.stringify(produtos));
 }
 
 // CARREGAR PRODUTOS
+
 function carregarProdutos() {
     const tabela = document.getElementById("lista-produtos");
 
@@ -35,6 +103,7 @@ function carregarProdutos() {
             coluna.textContent = valor;
             linha.appendChild(coluna);
         });
+
         let situacao = "Normal";
 
         if (produto.estoque === 0) {
@@ -46,6 +115,7 @@ function carregarProdutos() {
         const colunaSituacao = document.createElement("td");
         colunaSituacao.textContent = situacao;
         linha.appendChild(colunaSituacao);
+
         const colunaAcoes = document.createElement("td");
 
         const botaoEditar = document.createElement("button");
@@ -71,6 +141,7 @@ function carregarProdutos() {
 }
 
 // EDITAR PRODUTO
+
 function editarProduto(codigo) {
     const produto = produtos.find(function (item) {
         return item.codigo === codigo;
@@ -90,9 +161,14 @@ function editarProduto(codigo) {
     const minimo = prompt("Estoque mínimo:", produto.estoqueMinimo);
     if (minimo === null) return;
 
-    if (!nome.trim() || !categoria.trim() || !unidade.trim() ||
-        minimo.trim() === "" || Number(minimo) < 0 ||
-        !Number.isFinite(Number(minimo))) {
+    if (
+        !nome.trim() ||
+        !categoria.trim() ||
+        !unidade.trim() ||
+        minimo.trim() === "" ||
+        Number(minimo) < 0 ||
+        !Number.isFinite(Number(minimo))
+    ) {
         alert("Preencha os dados corretamente.");
         return;
     }
@@ -109,6 +185,7 @@ function editarProduto(codigo) {
 }
 
 // EXCLUIR PRODUTO
+
 function excluirProduto(codigo) {
     const confirmar = confirm("Deseja realmente excluir este produto?");
 
@@ -125,6 +202,7 @@ function excluirProduto(codigo) {
 }
 
 // CADASTRAR PRODUTO
+
 if (formulario) {
     formulario.addEventListener("submit", function (event) {
         event.preventDefault();
@@ -145,8 +223,17 @@ if (formulario) {
             return;
         }
 
-        if (estoqueInicial < 0 || estoqueMinimo < 0) {
-            alert("As quantidades não podem ser negativas.");
+        if (
+            !codigoProduto ||
+            !nomeProduto ||
+            !categoriaProduto ||
+            !unidadeProduto ||
+            estoqueInicial < 0 ||
+            estoqueMinimo < 0 ||
+            !Number.isFinite(estoqueInicial) ||
+            !Number.isFinite(estoqueMinimo)
+        ) {
+            alert("Verifique os dados do produto.");
             return;
         }
 
@@ -156,7 +243,10 @@ if (formulario) {
             categoria: categoriaProduto,
             unidade: unidadeProduto,
             estoque: estoqueInicial,
-            estoqueMinimo: estoqueMinimo
+            estoqueMinimo: estoqueMinimo,
+            estoquesPorFilial: {
+                Diadema: estoqueInicial
+            }
         };
 
         produtos.push(novoProduto);
@@ -171,10 +261,12 @@ if (formulario) {
 }
 
 // CARREGAR PRODUTOS NO CAMPO DE ENTRADAS
+
 function carregarProdutosEntrada() {
     const campoProduto = document.getElementById("produto-entrada");
 
     if (!campoProduto) return;
+    campoProduto.innerHTML = '<option value="">Selecione um produto</option>';
 
     produtos.forEach(function (produto) {
         const opcao = document.createElement("option");
@@ -187,11 +279,12 @@ function carregarProdutosEntrada() {
 }
 
 // CARREGAR PRODUTOS NO CAMPO DE SAÍDAS
+
 function carregarProdutosSaida() {
     const campoProduto = document.getElementById("produto-saida");
 
     if (!campoProduto) return;
-
+    campoProduto.innerHTML = '<option value="">Selecione um produto</option>';
     produtos.forEach(function (produto) {
         const opcao = document.createElement("option");
 
@@ -203,6 +296,7 @@ function carregarProdutosSaida() {
 }
 
 // REGISTRAR ENTRADA
+
 function registrarEntrada(event) {
     event.preventDefault();
 
@@ -215,15 +309,22 @@ function registrarEntrada(event) {
         return item.codigo === codigo;
     });
 
-    if (!produto || quantidade <= 0 || !Number.isFinite(quantidade) ||
-        !responsavel || !documento) {
+    if (
+        !produto ||
+        quantidade <= 0 ||
+        !Number.isFinite(quantidade) ||
+        !responsavel ||
+        !documento
+    ) {
         alert("Verifique os dados da entrada.");
         return;
     }
 
     produto.estoque += quantidade;
 
-    const movimentacao = {
+    atualizarEstoqueFilial(produto, "Diadema", produto.estoque);
+
+    movimentacoes.push({
         tipo: "Entrada",
         codigo: produto.codigo,
         produto: produto.nome,
@@ -231,20 +332,22 @@ function registrarEntrada(event) {
         responsavel: responsavel,
         documento: documento,
         data: new Date().toLocaleString("pt-BR")
-    };
-
-    movimentacoes.push(movimentacao);
+    });
 
     localStorage.setItem("movimentacoes", JSON.stringify(movimentacoes));
-
     salvarProdutos();
+
+    carregarProdutos();
+    carregarProdutosEntrada();
+    carregarProdutosSaida();
 
     alert("Entrada registrada! Estoque atualizado para " + produto.estoque + ".");
 
     document.getElementById("form-entrada").reset();
 }
 
-//REGISTRAR SAÍDA
+// REGISTRAR SAÍDA
+
 function registrarSaida(event) {
     event.preventDefault();
 
@@ -257,8 +360,13 @@ function registrarSaida(event) {
         return item.codigo === codigo;
     });
 
-    if (!produto || quantidade <= 0 || !Number.isFinite(quantidade) ||
-        !responsavel || !documento) {
+    if (
+        !produto ||
+        quantidade <= 0 ||
+        !Number.isFinite(quantidade) ||
+        !responsavel ||
+        !documento
+    ) {
         alert("Verifique os dados da saída.");
         return;
     }
@@ -270,7 +378,9 @@ function registrarSaida(event) {
 
     produto.estoque -= quantidade;
 
-    const movimentacao = {
+    atualizarEstoqueFilial(produto, "Diadema", produto.estoque);
+
+    movimentacoes.push({
         tipo: "Saída",
         codigo: produto.codigo,
         produto: produto.nome,
@@ -278,13 +388,13 @@ function registrarSaida(event) {
         responsavel: responsavel,
         documento: documento,
         data: new Date().toLocaleString("pt-BR")
-    };
-
-    movimentacoes.push(movimentacao);
+    });
 
     localStorage.setItem("movimentacoes", JSON.stringify(movimentacoes));
-
     salvarProdutos();
+
+    carregarProdutos();
+    carregarProdutosSaida();
 
     alert("Saída registrada! Estoque atualizado para " + produto.estoque + ".");
 
@@ -292,6 +402,7 @@ function registrarSaida(event) {
 }
 
 // CONECTAR FORMULÁRIO DE ENTRADA
+
 const formularioEntrada = document.getElementById("form-entrada");
 
 if (formularioEntrada) {
@@ -299,6 +410,7 @@ if (formularioEntrada) {
 }
 
 // CONECTAR FORMULÁRIO DE SAÍDA
+
 const formularioSaida = document.getElementById("form-saida");
 
 if (formularioSaida) {
@@ -306,6 +418,7 @@ if (formularioSaida) {
 }
 
 // CARREGAR HISTÓRICO DE MOVIMENTAÇÕES
+
 function carregarHistorico() {
     const tabela = document.getElementById("lista-movimentacoes");
 
@@ -336,41 +449,37 @@ function carregarHistorico() {
     });
 }
 
-// INICIALIZAÇÃO DAS PÁGINAS
-carregarProdutos();
-carregarProdutosEntrada();
-carregarHistorico();
-carregarProdutosSaida();
+// SALVAR TRANSFERÊNCIAS
 
+function salvarTransferencias() {
+    localStorage.setItem("transferencias", JSON.stringify(transferencias));
+}
 
 // CARREGAR PRODUTOS NO CAMPO DE TRANSFERÊNCIAS
+
 function carregarProdutosTransferencia() {
     const campoProduto = document.getElementById("produto-transferencia");
+    const campoOrigem = document.getElementById("filial-origem");
 
-    if (!campoProduto) return;
+    if (!campoProduto || !campoOrigem) return;
+
+    const origem = campoOrigem.value.trim();
 
     campoProduto.innerHTML = '<option value="">Selecione um produto</option>';
 
     produtos.forEach(function (produto) {
+        const saldo = obterEstoqueFilial(produto, origem);
         const opcao = document.createElement("option");
 
         opcao.value = produto.codigo;
-        opcao.textContent = produto.nome + " (Estoque: " + produto.estoque + ")";
+        opcao.textContent = produto.nome + " (Estoque: " + saldo + ")";
 
         campoProduto.appendChild(opcao);
     });
 }
 
-// INICIALIZAR CAMPO DE TRANSFERÊNCIAS
-carregarProdutosTransferencia();
-
-
-// SALVAR TRANSFERÊNCIAS
-function salvarTransferencias() {
-    localStorage.setItem("transferencias", JSON.stringify(transferencias));
-}
-
 // CARREGAR TRANSFERÊNCIAS NA TABELA
+
 function carregarTransferencias() {
     const tabela = document.getElementById("lista-transferencias");
 
@@ -387,6 +496,8 @@ function carregarTransferencias() {
             transferencia.destino,
             transferencia.quantidadeEnviada,
             transferencia.quantidadeRecebida ?? "-",
+            transferencia.responsavelRecebimento || "-",
+            transferencia.divergencia || 0,
             transferencia.situacao
         ];
 
@@ -409,18 +520,29 @@ function carregarTransferencias() {
             colunaAcoes.appendChild(botaoReceber);
         }
 
+        if (transferencia.situacao === "Divergência pendente") {
+            const botaoJustificar = document.createElement("button");
+            botaoJustificar.textContent = "Justificar divergência";
+
+            botaoJustificar.addEventListener("click", function () {
+                justificarDivergencia(transferencia.id);
+            });
+
+            colunaAcoes.appendChild(botaoJustificar);
+        }
+
         linha.appendChild(colunaAcoes);
         tabela.appendChild(linha);
     });
 }
 
-
 // REGISTRAR ENVIO DE TRANSFERÊNCIA
+
 function registrarTransferencia(event) {
     event.preventDefault();
 
-    const origem = document.getElementById("filial-origem").value.trim();
-    const destino = document.getElementById("filial-destino").value.trim();
+    const origem = normalizarFilial(document.getElementById("filial-origem").value);
+    const destino = normalizarFilial(document.getElementById("filial-destino").value);
     const codigo = document.getElementById("produto-transferencia").value;
     const quantidade = Number(document.getElementById("quantidade-transferencia").value);
     const responsavel = document.getElementById("responsavel-transferencia").value.trim();
@@ -430,8 +552,15 @@ function registrarTransferencia(event) {
         return item.codigo === codigo;
     });
 
-    if (!produto || !origem || !destino || !responsavel || !documento ||
-        !Number.isFinite(quantidade) || quantidade <= 0) {
+    if (
+        !produto ||
+        !origem ||
+        !destino ||
+        !responsavel ||
+        !documento ||
+        !Number.isInteger(quantidade) ||
+        quantidade <= 0
+    ) {
         alert("Verifique os dados da transferência.");
         return;
     }
@@ -441,12 +570,19 @@ function registrarTransferencia(event) {
         return;
     }
 
-    if (quantidade > produto.estoque) {
-        alert("Estoque insuficiente! Disponível: " + produto.estoque);
+    const saldoOrigem = obterEstoqueFilial(produto, origem);
+
+    if (quantidade > saldoOrigem) {
+        alert(
+            "Estoque insuficiente na filial " +
+            origem +
+            ". Disponível: " +
+            saldoOrigem
+        );
         return;
     }
 
-    produto.estoque -= quantidade;
+    atualizarEstoqueFilial(produto, origem, saldoOrigem - quantidade);
 
     const novaTransferencia = {
         id: Date.now(),
@@ -456,9 +592,11 @@ function registrarTransferencia(event) {
         destino: destino,
         quantidadeEnviada: quantidade,
         quantidadeRecebida: null,
-        responsavel: responsavel,
+        responsavelEnvio: responsavel,
+        responsavelRecebimento: "",
         documento: documento,
         situacao: "Em trânsito",
+        divergencia: 0,
         data: new Date().toLocaleString("pt-BR")
     };
 
@@ -478,16 +616,20 @@ function registrarTransferencia(event) {
     salvarTransferencias();
     localStorage.setItem("movimentacoes", JSON.stringify(movimentacoes));
 
+    carregarProdutos();
     carregarProdutosTransferencia();
     carregarTransferencias();
 
-    alert("Transferência enviada! Quantidade retirada do estoque da filial de origem.");
+    alert("Transferência enviada e estoque da origem atualizado!");
 
     document.getElementById("form-transferencia").reset();
     document.getElementById("filial-origem").value = "Diadema";
+
+    carregarProdutosTransferencia();
 }
 
 // REGISTRAR RECEBIMENTO DA TRANSFERÊNCIA
+
 function registrarRecebimento(id) {
     const transferencia = transferencias.find(function (item) {
         return item.id === id;
@@ -498,62 +640,165 @@ function registrarRecebimento(id) {
         return;
     }
 
+    const responsavel = prompt("Nome de quem está recebendo:");
+
+    if (responsavel === null || !responsavel.trim()) {
+        alert("Informe o responsável pelo recebimento.");
+        return;
+    }
+
     const quantidade = prompt(
-        "Quantidade efetivamente recebida de " +
-        transferencia.produto +
-        " (enviada: " + transferencia.quantidadeEnviada + "):"
+        "Quantidade efetivamente recebida (enviada: " +
+        transferencia.quantidadeEnviada +
+        "):"
     );
 
     if (quantidade === null) return;
 
     const recebida = Number(quantidade);
 
-    if (!Number.isInteger(recebida) || recebida <= 0 ||
-        recebida > transferencia.quantidadeEnviada) {
+    if (
+        !Number.isInteger(recebida) ||
+        recebida <= 0 ||
+        recebida > transferencia.quantidadeEnviada
+    ) {
         alert("Informe uma quantidade válida, maior que zero e não superior à enviada.");
         return;
     }
 
+    const produto = produtos.find(function (item) {
+        return item.codigo === transferencia.codigo;
+    });
+
+    if (!produto) {
+        alert("Produto não encontrado.");
+        return;
+    }
+
+    const saldoDestino = obterEstoqueFilial(produto, transferencia.destino);
+
+    atualizarEstoqueFilial(
+        produto,
+        transferencia.destino,
+        saldoDestino + recebida
+    );
+
     transferencia.quantidadeRecebida = recebida;
+    transferencia.responsavelRecebimento = responsavel.trim();
+    transferencia.dataRecebimento = new Date().toLocaleString("pt-BR");
 
     if (recebida === transferencia.quantidadeEnviada) {
         transferencia.situacao = "Recebida";
     } else {
-        transferencia.situacao = "Divergência";
+        transferencia.situacao = "Divergência pendente";
         transferencia.divergencia =
             transferencia.quantidadeEnviada - recebida;
     }
 
-    transferencia.dataRecebimento = new Date().toLocaleString("pt-BR");
-
     movimentacoes.push({
         tipo: "Transferência recebida",
-        codigo: transferencia.codigo,
-        produto: transferencia.produto,
+        codigo: produto.codigo,
+        produto: produto.nome,
         quantidade: recebida,
-        responsavel: transferencia.destino,
+        responsavel: responsavel.trim(),
         documento: transferencia.documento,
         data: new Date().toLocaleString("pt-BR")
     });
 
+    salvarProdutos();
+    salvarTransferencias();
     localStorage.setItem("movimentacoes", JSON.stringify(movimentacoes));
 
-    salvarTransferencias();
+    carregarProdutos();
     carregarTransferencias();
 
-    alert(
-        recebida === transferencia.quantidadeEnviada
-            ? "Recebimento registrado com sucesso!"
-            : "Divergência identificada! Faltaram " +
-            transferencia.divergencia + " unidades."
-    );
+    if (transferencia.divergencia > 0) {
+        alert(
+            "Divergência identificada: faltaram " +
+            transferencia.divergencia +
+            " unidades."
+        );
+    } else {
+        alert("Recebimento registrado e estoque do destino atualizado!");
+    }
 }
+
+// JUSTIFICAR DIVERGÊNCIA
+
+function justificarDivergencia(id) {
+    const transferencia = transferencias.find(function (item) {
+        return item.id === id;
+    });
+
+    if (
+        !transferencia ||
+        transferencia.situacao !== "Divergência pendente"
+    ) {
+        alert("Não existe divergência pendente para esta transferência.");
+        return;
+    }
+
+    const responsavel = prompt("Nome do responsável pela justificativa:");
+
+    if (responsavel === null || !responsavel.trim()) {
+        alert("Informe o responsável.");
+        return;
+    }
+
+    const justificativa = prompt("Informe o motivo da divergência:");
+
+    if (justificativa === null || !justificativa.trim()) {
+        alert("A justificativa é obrigatória.");
+        return;
+    }
+
+    transferencia.responsavelJustificativa = responsavel.trim();
+    transferencia.justificativa = justificativa.trim();
+    transferencia.dataJustificativa = new Date().toLocaleString("pt-BR");
+    transferencia.situacao = "Aguardando aprovação";
+
+    movimentacoes.push({
+        tipo: "Justificativa de divergência",
+        codigo: transferencia.codigo,
+        produto: transferencia.produto,
+        quantidade: transferencia.divergencia,
+        responsavel: responsavel.trim(),
+        documento: transferencia.documento,
+        data: new Date().toLocaleString("pt-BR")
+    });
+
+    salvarTransferencias();
+    localStorage.setItem("movimentacoes", JSON.stringify(movimentacoes));
+
+    carregarTransferencias();
+
+    alert("Justificativa registrada. A divergência aguarda aprovação da gestão.");
+}
+
 // CONECTAR FORMULÁRIO DE TRANSFERÊNCIA
+
 const formularioTransferencia = document.getElementById("form-transferencia");
 
 if (formularioTransferencia) {
     formularioTransferencia.addEventListener("submit", registrarTransferencia);
 }
 
-// INICIALIZAR TRANSFERÊNCIAS
+// ATUALIZAR PRODUTOS QUANDO A ORIGEM MUDAR
+
+const campoOrigemTransferencia = document.getElementById("filial-origem");
+
+if (campoOrigemTransferencia) {
+    campoOrigemTransferencia.addEventListener("input", function () {
+        carregarProdutosTransferencia();
+    });
+}
+
+// INICIALIZAÇÃO DAS PÁGINAS
+
+salvarProdutos();
+carregarProdutos();
+carregarProdutosEntrada();
+carregarProdutosSaida();
+carregarHistorico();
+carregarProdutosTransferencia();
 carregarTransferencias();
