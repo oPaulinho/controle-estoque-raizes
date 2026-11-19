@@ -1,4 +1,5 @@
 
+(function () {
 const produtos = JSON.parse(localStorage.getItem("produtos")) || [];
 const movimentacoes = JSON.parse(localStorage.getItem("movimentacoes")) || [];
 const transferencias = JSON.parse(localStorage.getItem("transferencias")) || [];
@@ -58,3 +59,4 @@ if (tabela) {
         });
     }
 }
+})();
